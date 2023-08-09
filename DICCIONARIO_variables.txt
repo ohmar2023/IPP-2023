@@ -1,0 +1,6 @@
+ENLACE: https://anda.inec.gob.ec/anda/index.php/catalog/939/data_dictionary#page=F4&tab=data-dictionary
+
+tamanoe_plazas	Tamaño de empresas con plazas de empleo registrado equivalente
+codigo_seccion	Código CIIU4 - Sección (1 dígito)	
+codigo_division	Código CIIU4 - División (2 dígitos)	
+codigo_clase	Código CIIU4 - Clase (4 dígitos)

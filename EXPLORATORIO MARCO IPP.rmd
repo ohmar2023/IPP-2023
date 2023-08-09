@@ -1,0 +1,338 @@
+---
+# title: 
+# author: "DINEM"
+# #date: "`r Sys.Date()`"
+# output:
+#   html_document: default
+#   #pdf_document: default
+#   toc: true
+#     toc_float: true
+#     theme: cerulean
+#     highlight: kate
+
+title: "Análisis Exploratorio del Marco Muestral-IPP (DIEE-2021)"
+author: "DINEM"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cerulean
+    highlight: kate
+---
+
+```{r, include=FALSE,echo = FALSE}
+#library(xlsx)
+library(readxl)
+library(dplyr)
+library(tidyverse)
+library(janitor)
+library(reshape2)
+#install.packages("kableExtra")
+#library("kableExtra")
+```
+
+
+```{r, message = FALSE,echo = FALSE}
+  
+# TASA DE NO RESPUESTA ENESEM 2021 ----------------------------------------
+
+tnr <- readRDS("DATA/TNR/tnr_enesem_historica.rds")
+
+# CARGAMOS EL MARCOIPP ----------------------------------------------------
+
+canasta <- read_excel("DATA/CANASTA/CANASTA_LISTADO.xlsx", sheet = "ACTUALIZADO")
+marco_2021_canasta <- read_excel("PRODUCTOS/marco_IPP.xlsx")
+
+# CARGAMOS LOS TAMAÑOS ----------------------------------------------------
+
+Tam_Total <- read_excel("PRODUCTOS/TAMANIO/Tam_Total.xlsx")
+
+# CARGAMOS EL DIRECTORIO 2020 ---------------------------------------------
+directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
+                    filter(anio==2020)
+
+directorio_2020 <- directorio_2020 %>%  mutate(id_empresa=as.character(id_empresa),
+                                               dom = paste0(tamanou_plazas,codigo_seccion))
+```
+
+## Construcción del marco muestral
+
+Considerando los códigos (Código CIIU Rev 4 - 6 dígitos) que se enviaron de los productos que forman parte de la canasta del IPP se seleccionaron las actividades pricipales (Código CIIU4 - Sección - 1 dígito) para la elaboración del marco de muestreo.
+
+Se consideran las empresas cuya situación consta como "activas" (1) y se descartan las microempresas, con lo que se tiene: 
+
+* 2	Pequeña empresa
+* 3	Mediana empresa "A"
+* 4	Mediana empresa "B"
+* 5	Grande empresa
+
+El tamaño y actividad principal económica de la empresa conforman cada dominio de estudio.
+
+```{r, message = FALSE,echo = FALSE}
+knitr::kable(
+marco_2021_canasta %>% group_by(dom_m) %>% summarise(Total=n()) %>% rename(Dominio=dom_m) %>% adorn_totals(c("row"))
+,align = "cc"
+)
+```
+
+Podemos observar la disponibilidad de cada producto (Código CIIU Rev 4 - 6 dígitos) en cada un o de los tamaños de empresa.
+
+```{r, message = FALSE,echo = FALSE}
+
+prod_marco <- marco_2021_canasta %>% group_by(codigo_actividad_eco,tamanou_plazas) %>% 
+  summarise(N=n()) %>% 
+  filter(N>=0) 
+  #filter(grepl(codigo_actividad_eco, pattern = "^")) 
+
+prod_marco <- dcast(prod_marco,codigo_actividad_eco~tamanou_plazas, value.var = "N") %>% 
+  adorn_totals(c("row", "col"))
+
+knitr::kable(
+prod_marco %>% rename("Actividad" = codigo_actividad_eco)
+,align = "ccccccc"
+)
+
+```
+
+
+
+
+<!-- Del listado enviado (Código CIIU Rev 4 - 6 dígitos) no se han podido encontrar empresas que produzcan los siguientes 68 prodcutos: -->
+
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+<!-- knitr::kable( -->
+<!-- canasta %>% filter((!unique(canasta$COD_PRODUCTO) %in% unique(marco_2021_canasta$codigo_actividad_eco))) %>% rename(Producto=COD_PRODUCTO) -->
+<!-- ,align = "c" -->
+<!-- ) -->
+<!-- ``` -->
+
+## Forma Institucional
+
+La  forma institucional corresponde a una sub-clasificación de la forma legal de las empresas, que permite identificar a las empresas dentro de una tipología cercana al tipo institucional del Sistema de Cuentas Nacionales.
+
+Las posibles clasifiaciones son:
+
+* 1	Régimen simplificado RISE
+* 2	Persona Natural no obligado a llevar contabilidad
+* 3	Persona Natural obligado a llevar contabilidad
+* 4	Sociedad con fines de lucro
+* 5	Sociedad sin fines de lucro
+* 6	Empresa Pública
+* 7	Institución Pública
+* 8	Economía Popular y Solidaria
+
+```{r, message = FALSE,echo = FALSE}
+knitr::kable(
+marco_2021_canasta %>% group_by(forma_institucional) %>% summarise(Total=n()) %>% rename("FORMA INSTITUCIONAL"=forma_institucional),align = "cc"
+)
+
+```
+<!-- Se debe definir si las empresas cuya forma institucional "Persona Natural no obligado a llevar contabilidad" forman parte o no del marco de muestreo, en encuestas como la ENESEM este tipo de empresas no son consideradas para el estudio. -->
+
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+<!-- knitr::kable( -->
+<!-- marco_2021_canasta %>% filter(forma_institucional==2) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño"=tamanou_plazas),align = "cc" -->
+<!-- ) -->
+<!-- ``` -->
+
+## Ventas Totales
+
+Son todos los ingresos de la empresa proveniente de las transacciones comerciales de bienes o servicios durante un año.
+
+Esta variable es importante, pues se considera como variable de diseño para la elaboración del diseño muestral, sin embargo, una vez revisada la información se observa que no todas las empresas cuentan con registros.
+
+Si consideramos unicamente las empresas que no presentan el valor de VENTAS TOTALES y las agrupamos por tamaño de empresa, se tiene lo siguiente:
+
+```{r, message = FALSE,echo = FALSE}
+tamano_na <- marco_2021_canasta %>% filter(situacion==1 & is.na(ventas_totales)) %>%
+  group_by(tamanou_plazas) %>% summarise("VENTAS NA"=n()) %>%  rename("TAMANO"=tamanou_plazas)
+#knitr::kable(tamano_na,align = "cc")
+
+tamano_total <- marco_2021_canasta %>% filter(situacion==1) %>%
+  group_by(tamanou_plazas) %>% summarise("TOTAL"=n()) %>%  rename("TAMANO"=tamanou_plazas)
+
+tabla_na_total <-tamano_na %>% left_join(tamano_total,by="TAMANO")
+tabla_na_total <- tabla_na_total %>%
+                mutate("PORCENTAJE NA"=round((`VENTAS NA`/TOTAL)*100,2)) %>%
+                select(TAMANO,`VENTAS NA`,TOTAL,`PORCENTAJE NA`)
+knitr::kable(tabla_na_total,align = "cc")
+```
+
+Es importante visualizar el porcenataje de valores perdidos en la variable de interés por cada dominio de estudio:
+
+```{r, message = FALSE,echo = FALSE}
+tamano_na <- marco_2021_canasta %>% mutate(dom=paste0(tamanou_plazas,codigo_seccion))%>% 
+  filter(situacion==1 & is.na(ventas_totales)) %>%
+  group_by(dom) %>% summarise("NA"=n()) %>% rename("DOMINIO" = dom)
+
+tamano_total <- marco_2021_canasta %>% mutate(dom=paste0(tamanou_plazas,codigo_seccion))%>% filter(situacion==1) %>%
+  group_by(dom) %>% summarise("TOTAL"=n()) %>%  rename("DOMINIO"=dom)
+
+tabla_na_total <-tamano_na %>% left_join(tamano_total,by="DOMINIO")
+tabla_na_total <- tabla_na_total %>%
+                mutate("% NA"=round((`NA`/TOTAL)*100,2)) %>%
+                select(DOMINIO,TOTAL, `NA`,`% NA`)
+knitr::kable(tabla_na_total,align = "cc")
+```
+
+## Comparación con DIEE - 2020
+
+De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 4 de ellas tienen un valor mayor a cero en esta variable en el DIEE-2020.
+
+```{r, message = FALSE,echo = FALSE}
+#EMPRESAS CON NA EN VENTAS EN EL DIEE2021 QUE VAN A SER BSCADAS EN EL DIEE2020
+venna_001 <- marco_2021_canasta %>% filter(is.na(ventas_totales) )
+venna_002 <- directorio_2020 %>% filter(id_empresa %in% venna_001$id_empresa & tamanou_plazas!=1) 
+
+```
+
+```{r, message = FALSE,echo = FALSE}
+#EMPRESAS CON NA EN VENTAS EN EL DIEE2021 QUE VAN A SER BSCADAS EN EL DIEE2020
+knitr::kable(
+venna_002 %>% filter(ventas_totales>0) %>% group_by(dom) %>% summarise(Total = n()) %>% adorn_totals(c("row")) %>% rename("Dominio"=dom)
+,align = "cc" ) 
+
+```
+
+De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 63 de ellas tienen un valor igual a cero en ventas en el DIEE-2020.
+
+```{r, message = FALSE,echo = FALSE}
+knitr::kable(
+venna_002 %>% filter(ventas_totales==0, tamanou_plazas!=1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño"=tamanou_plazas) %>% adorn_totals(c("row"))
+,align = "cc" ) 
+```
+
+De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 42 de ellas tampoco presentan valor en ventas en el DIEE-2020.
+
+```{r, message = FALSE,echo = FALSE}
+knitr::kable(
+venna_002 %>% filter(is.na(ventas_totales), tamanou_plazas!=1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% adorn_totals(c("row"))%>% rename("Tamaño"=tamanou_plazas)
+,align = "cc" ) 
+```
+
+Existen 43 nuevas empresas, en comparación al DIEE-2020, que no disponen de datos en la variable ventas totales.
+
+```{r, message = FALSE,echo = FALSE}
+
+# marco_2021_canasta %>% filter(!id_empresa %in% directorio_2020$id_empresa)%>% group_by(tamanou_plazas) %>% summarise(n()) %>% adorn_totals(c("row"))
+knitr::kable(
+marco_2021_canasta %>% filter(tamanou_plazas!=1 & !id_empresa %in% directorio_2020$id_empresa) %>% filter(is.na(ventas_totales)) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% adorn_totals(c("row")) %>% 
+rename("Tamaño"=tamanou_plazas)
+,align = "cc" ) 
+```
+
+Existen  empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”,
+
+```{r, message = FALSE,echo = FALSE}
+
+
+base_1 <- marco_2021_canasta %>% 
+  left_join(select(directorio_2020,id_empresa,tam_old=tamanou_plazas),
+            by="id_empresa") %>% mutate(tam_old=ifelse(is.na(tam_old),"0",tam_old),
+         Cambio=ifelse((tamanou_plazas=="4" & tam_old=="5"),1,0)) 
+knitr::kable(
+base_1 %>% filter(Cambio==1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño 2021"=tamanou_plazas)
+,align = "cc" ) 
+
+base_1 %>% filter(Cambio==1) %>%  group_by(codigo_actividad_eco) %>% summarise(n())
+```
+
+## Tamaño de la muestra
+
+Dentro de cada dominio de estudio se considera como grupo de inclusión forzosa a las empresas con tamaño “Grande empresa”, es decir, estas empresas entran con probabilidad uno (1) a formar parte de la muestra. 
+
+Se debe definir si se incluirá con probabilidad uno a las empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”.
+
+La variable de diseño, en base a la cual se calcula el tamaño de la muestra es “Ventas totales 2021”. Los valores poblacionales (marco muestral) de esta variable se toman de la base de datos del Directorio de Empresas y Establecimientos del año 2021 (DIEE-2021).
+
+Se consideraría, en caso de existir, una tasa de no respuesta particular para cada dominio de estudio, esta tasa de no respuesta podría ser tomada de la cobertura histórica actualizada para la ENESEM-2021, sin embargo, se debe definir si es adecuado o no el uso de esta infomración en la presente operación estadística. Para las empresas de tamaño dos y algunos otros dominios no se cuenta con una tasa de no respuesta ya que la ENESEM no recolecta información para esos casos, por ejemplo, para los dominios que involucren la actividad económica tipo "A", ya que esta actividad no es considerada en la ENESEM.
+
+A continuación se muestra las tasas de no respuesta para los dominios que se consideran en la ENESEM-2021:
+
+```{r, message = FALSE,echo = FALSE}
+
+knitr::kable(
+tnr %>% mutate(tnr_pro=round(tnr_pro,2)) %>% select(Dominio=dominio, tnr_max, tnr_pro, tnr_min)
+,align = "ccccc" ) 
+
+```
+
+Para el caso de las grandes empresas no se requiere una tasa de no repsuesta ya que tienen probabilidad uno de inclusión. Para todos los casos de los dominios que involucran las empresas de tamaño dos (pequeñas), no se tienen tasas de no repsuesta (la ENESEM no recolecta información para ese caso). Adicionalemnte, se presentan el resto de casos en los que los dominios de estudio no cuentan con una tasa de no respuesta: 
+
+```{r, message = FALSE,echo = FALSE}
+
+knitr::kable(
+unique(marco_2021_canasta %>% filter(! dom_m %in% tnr$dominio & !tamanou_plazas %in% c(2,5)) %>% select(Dominio=dom_m) )
+,align = "c" ) 
+
+```
+
+Para todos los dominios, de los que no se disponen de tasa de no respuesta, se propone desde el equipo de DECON/CAB-SIP fijar en el 20%. 
+
+Con las consideraciones indicadas, se porcede a hacer un calculo inicial del tamaño muetsral para cada dominio de estudio:
+
+
+```{r, message = FALSE,echo = FALSE}
+
+knitr::kable(
+Tam_Total %>% filter(!is.na(n_max))%>% 
+  rename("Dominio" = dominio) %>% 
+  adorn_totals(c("row"))
+,align = "ccccc" )
+
+```
+Podemos visualizar el tamaño máximo de la muestra para compararlo con la cantidad de productos que tenemos disponibles en cada uno de los dominios de estudio.
+
+```{r, message = FALSE,echo = FALSE}
+knitr::kable(
+marco_2021_canasta %>% group_by(codigo_actividad_eco,tamanou_plazas) %>% 
+  summarise(N1=n()) %>% 
+  mutate(dominio = paste0(tamanou_plazas,substr(codigo_actividad_eco,1,1)))%>%
+  group_by(dominio) %>% summarise(N_Prod = n()) %>% 
+  left_join(Tam_Total,by="dominio") %>% select(dominio,N_Prod,n_max,Total) %>% 
+  rename("Dominio"=dominio)
+,align = "ccc" )
+```
+
+
+```{r, message = FALSE,echo = FALSE}
+
+
+prod_marco %>% group_by(substr(codigo_actividad_eco,1,1) ) %>% summarise(n()) %>% adorn_totals()
+
+marco_2021_canasta %>% mutate("seis"=substr(codigo_actividad_eco,1,1), 
+                              control=ifelse(seis==codigo_seccion,1,0)) %>% filter(control==0)
+
+prod_marco %>% mutate("seis"=substr(codigo_actividad_eco,1,1)) %>% group_by(seis) %>% summarise(n())
+```
+
+<!-- ## Comparación con ENESEM -->
+
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+
+<!-- ENESEM_2021_SELECCION <- read_excel("DATA/ENESEM_2021/ENESEM_2021_SELECCION.xlsx", -->
+<!--                                     sheet = "Hoja2") -->
+
+<!-- marco_2021_enesem <- readRDS("DATA/ENESEM_2021/marco_2021_enesem.rds") -->
+
+<!-- #marco_2021_enesem %>% group_by(dom_m) %>% summarise(Total_ENESEM=n()) %>% rename(dominio=dom_m) %>% View() -->
+
+<!-- knitr::kable( -->
+<!-- ENESEM_2021_SELECCION %>% inner_join(select(Tam_Total,dominio,n_pro,Total), -->
+<!--                                      by="dominio") %>% -->
+<!--   inner_join(marco_2021_enesem %>% group_by(dom_m) %>% -->
+<!--                summarise(Total_ENESEM=n()) %>% -->
+<!--                rename(dominio=dom_m), by="dominio") %>% -->
+<!--   select(dominio, Total_ENESEM,Total_IPP = Total,n_ESNESEM=N_ENESEM, n_IPP = n_pro) -->
+<!-- ,align = "cc" ) -->
+
+<!-- ``` -->
+
+
+
+
+
+
+
+
+
