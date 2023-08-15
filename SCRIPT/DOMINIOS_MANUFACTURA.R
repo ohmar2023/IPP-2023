@@ -37,9 +37,9 @@ tam_c <- base %>%
          denominador=((N-1)/N)*((er*ventas/z)^2)+N*(desv^2),
          tam=numerador/denominador) %>% 
   left_join(select(tnr,dominio,tnr_max,tnr_pro, tnr_min),by="dominio") %>% 
-  mutate(tnr_max=0.2,#ifelse(is.na(tnr_max),0,tnr_max/100),
-         tnr_pro=0.2,#ifelse(is.na(tnr_pro),0,tnr_pro/100),
-         tnr_min=0.2,#ifelse(is.na(tnr_min),0,tnr_min/100),
+  mutate(tnr_max=ifelse(is.na(tnr_max),0,tnr_max/100),
+         tnr_pro=ifelse(is.na(tnr_pro),0,tnr_pro/100),
+         tnr_min=ifelse(is.na(tnr_min),0,tnr_min/100),
          n1=ceiling(tam/(1-tnr_max)),
          n2=ifelse(n1>N,N,n1),
          n3=ceiling(tam/(1-tnr_pro)),
@@ -53,11 +53,10 @@ tam_c %>% select(dominio,N,n4) %>%
 
 # GRAFICOS ----------------------------------------------------------------
 
-grafica <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5,
-                                         codigo_division=="C10")
+grafica <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5)
 
-ggplot(grafica %>% group_by(tamanou_plazas) %>% summarise(Total=sum(ventas_totales,na.rm = T)),
-       aes(Total,fill=as.character(tamanou_plazas)))+geom_bar(position="dodge")
+# ggplot(grafica %>% group_by(tamanou_plazas) %>% summarise(Total=sum(ventas_totales,na.rm = T)),
+#        aes(Total,fill=as.character(tamanou_plazas)))+geom_bar(position="dodge")
 
 ggplot(grafica,
        aes(codigo_division,fill=as.character(tamanou_plazas)))+geom_bar(position="dodge")
