@@ -4,14 +4,23 @@ library(tidyverse)
 library(openxlsx)
 library(readxl)
 library(janitor)
+library(reshape2)
 
 # CARGAMOS EL MARCOIPP ----------------------------------------------------
 marco_2021_canasta <- read_excel("PRODUCTOS/marco_IPP.xlsx")
   
 # TASA DE NO RESPUESTA ENESEM 2021 ----------------------------------------
 
-tnr <- readRDS("DATA/TNR/tnr_enesem_historica.rds") %>% 
+tnr_1 <- readRDS("DATA/TNR/tnr_enesem_historica.rds") %>% 
       select(dominio,tnr_max, tnr_pro, tnr_min)
+
+tnr_2 <- tnr_1 %>% mutate(act_principal=substr(dominio,2,2)) %>% 
+                   group_by(act_principal) %>% 
+                   summarise_if ( is.numeric , mean , na.rm  =  TRUE ) %>% 
+                   mutate(dominio=paste0("2",act_principal)) %>% 
+                   select(dominio,contains("tnr"))
+
+tnr <- rbind(tnr_2,tnr_1)
 
 tnr <- rbind(tnr, marco_sin_inc_for %>% mutate(dom=paste0(tamanou_plazas,codigo_seccion)) %>% 
   filter(!dom %in% tnr$dominio) %>% select(dominio=dom) %>% unique()%>% mutate(tnr_max=20.0, 
@@ -94,7 +103,7 @@ tamanio_final_90_10 <- inc_for %>%
             n_max  = sum(n2),
             n_pro = sum(n4),
             n_min = sum(n6))
-tamanio_final_90_10 %>% adorn_totals(c("row")) %>% View()
+tamanio_final_90_10 %>% adorn_totals(c("row")) %>% View("N_final")
 
 
 # INCLUSION FORZOSA -------------------------------------------------------
