@@ -27,7 +27,7 @@ a_1 %>% group_by(codigo_division) %>% summarise(Total_cod_2 = n()) %>%
 # CALCULO DE TAMAÑO -------------------------------------------------------
 nc=0.9
 z=qnorm(nc+(1-nc)/2)
-er=0.1
+er=0.2
 base <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5) %>% 
   left_join(select(base_manufactura,codigo_actividad_eco=COD_PROD,Categorias),
             by="codigo_actividad_eco")
