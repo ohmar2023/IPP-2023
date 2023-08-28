@@ -23,7 +23,8 @@ canasta <- read_excel("DATA/CANASTA/CANASTA_LISTADO.xlsx", sheet = "ACTUALIZADO"
 
 # CREANDO MARCO IPP CON DIEE 2021 -----------------------------------------
 
-marco_2021_canasta <- directorio %>% filter(codigo_actividad_eco %in% canasta$COD_PRODUCTO,
+marco_2021_canasta <- directorio %>% 
+                      filter(codigo_actividad_eco %in% canasta$COD_PRODUCTO,
                                           tamanou_plazas!=1) %>% 
   #filtro forma institucional Institucion publica
   #filter(forma_institucional != 7) %>%
@@ -44,5 +45,5 @@ marco_2021_canasta <- directorio %>% filter(codigo_actividad_eco %in% canasta$CO
 
 # EXPORTANDO MARCO CANASTA 2021 -------------------------------------------
 
-write.xlsx(marco_2021_canasta,"PRODUCTOS/marco_IPP.xlsx")
+write.xlsx(marco_2021_canasta,"PRODUCTOS/marco_IPP.xlsx",overwrite = T)
 
