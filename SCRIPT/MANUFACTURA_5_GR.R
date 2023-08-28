@@ -1,29 +1,21 @@
 
-# CARGAMOS EL DIRECTORIO 2020 ---------------------------------------------
+# CARGAMOS LA BASE DE MANUFACTURA ---------------------------------------------
 base_manufactura <- read_excel("DATA/CANASTA/CANASTA_LISTADO.xlsx", 
                               sheet = "MANUFACTURA",range = "A1:G131")
 
 
-directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
-  filter(anio==2020)
+# TNR para los nuevos dominios --------------------------------------------
 
-directorio_2020 <- directorio_2020 %>%  mutate(id_empresa=as.character(id_empresa),
-                                               dom = paste0(tamanou_plazas,codigo_seccion))
+TNR_C_5_GR <- tnr %>% filter(dominio=="2C")
+TNR_C_5_GR$dominio[1] <- as.character(1)
+                     
+for (i in c(2:5)) {
+  
+  TNR_C_5_GR <- rbind(TNR_C_5_GR,TNR_C_5_GR[1,])
+  TNR_C_5_GR$dominio[i] <- as.character(i)
 
-a_1 <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5) %>% 
-  group_by(codigo_division,codigo_actividad_eco) %>% 
-  summarise(n()) 
-
-n_distinct(a_1$codigo_actividad_eco)
-
-a_1 %>% group_by(codigo_division) %>% summarise(Total_cod_2 = n()) %>%
-  left_join(
-    marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5) %>% 
-      group_by(codigo_division) %>% 
-      summarise(Total_Emp=n()),
-    by="codigo_division"
-  ) %>% View()
-
+  }
+  
 # CALCULO DE TAMAÑO -------------------------------------------------------
 nc=0.9
 z=qnorm(nc+(1-nc)/2)
@@ -31,8 +23,6 @@ er=0.2
 base <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5) %>% 
   left_join(select(base_manufactura,codigo_actividad_eco=COD_PROD,Categorias),
             by="codigo_actividad_eco")
-
-table(base$Categorias)
 
 tam_c <- base %>% 
   mutate(dominio=as.character(Categorias),
@@ -44,7 +34,7 @@ tam_c <- base %>%
   mutate(numerador=(N*desv)^2,
          denominador=((N-1)/N)*((er*ventas/z)^2)+N*(desv^2),
          tam=numerador/denominador) %>% 
-  left_join(select(tnr,dominio,tnr_max,tnr_pro, tnr_min),by="dominio") %>% 
+  left_join(select(TNR_C_5_GR,dominio,tnr_max,tnr_pro, tnr_min),by="dominio") %>% 
   mutate(tnr_max=ifelse(is.na(tnr_max),0,tnr_max/100),
          tnr_pro=ifelse(is.na(tnr_pro),0,tnr_pro/100),
          tnr_min=ifelse(is.na(tnr_min),0,tnr_min/100),
@@ -59,6 +49,7 @@ tam_c %>% select(dominio,N,n4) %>%
   mutate(Porc = n4*100/N) %>% 
   adorn_totals()  %>% View("TAMAÑO")
 
+base_manufactura %>% group_by(Categorias,COD_PROD)
 # GRAFICOS ----------------------------------------------------------------
 
 grafica <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5,

@@ -10,7 +10,7 @@
 #     theme: cerulean
 #     highlight: kate
 
-title: "Análisis Exploratorio del Marco Muestral-IPP (DIEE-2021)"
+title: "Análisis del Marco y Tamaño Muestral del IPP-DN (DIEE-2021)"
 author: "DINEM"
 output:
   html_document:
@@ -34,10 +34,6 @@ library(reshape2)
 
 ```{r, message = FALSE,echo = FALSE}
   
-# TASA DE NO RESPUESTA ENESEM 2021 ----------------------------------------
-
-tnr <- readRDS("DATA/TNR/tnr_enesem_historica.rds")
-
 # CARGAMOS EL MARCOIPP ----------------------------------------------------
 
 canasta <- read_excel("DATA/CANASTA/CANASTA_LISTADO.xlsx", sheet = "ACTUALIZADO")
@@ -51,8 +47,9 @@ Tam_Total <- read_excel("PRODUCTOS/TAMANIO/Tam_Total.xlsx")
 directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
                     filter(anio==2020)
 
-directorio_2020 <- directorio_2020 %>%  mutate(id_empresa=as.character(id_empresa),
-                                               dom = paste0(tamanou_plazas,codigo_seccion))
+directorio_2020 <- directorio_2020 %>%
+  mutate(id_empresa=as.character(id_empresa),
+  dom = paste0(tamanou_plazas,codigo_seccion))
 ```
 
 ## Construcción del marco muestral
@@ -93,8 +90,6 @@ prod_marco %>% rename("Actividad" = codigo_actividad_eco)
 )
 
 ```
-
-
 
 
 <!-- Del listado enviado (Código CIIU Rev 4 - 6 dígitos) no se han podido encontrar empresas que produzcan los siguientes 68 prodcutos: -->
@@ -234,7 +229,48 @@ knitr::kable(
 base_1 %>% filter(Cambio==1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño 2021"=tamanou_plazas)
 ,align = "cc" ) 
 
-base_1 %>% filter(Cambio==1) %>%  group_by(codigo_actividad_eco) %>% summarise(n())
+#base_1 %>% filter(Cambio==1) %>%  group_by(codigo_actividad_eco) %>% summarise(n())
+```
+
+## Tasas de no respuesta (TNR)
+
+
+Se considera, en caso de existir, una tasa de no respuesta particular para cada dominio de estudio, esta tasa de no respuesta es tomada de la cobertura histórica actualizada para la ENESEM-2021, sin embargo, se debe definir si es adecuado o no el uso de esta infomración en la presente operación estadística. Para las "Pequeñas Empresas" y algunos otros dominios no se cuenta con una tasa de no respuesta ya que la ENESEM no recolecta información para esos casos, por ejemplo, para los dominios que involucren la actividad económica tipo "A", ya que esta actividad no es considerada en la ENESEM. 
+
+Para el caso de las "Pequeñas Empresas" se asigna como TNR el promedio de aquellos dominios de estudio que comaprten la misma actividad principal. Para todos los dominios, de los que no se disponen de tasa de no respuesta, se propone desde el equipo de DECON/CAB-SIP fijar en el 20%. Para las "Grandes Empresas" no se requiere una tasa de no respuesta ya que tienen probabilidad uno de inclusión. 
+
+
+A continuación se muestra las tasas de no respuesta para los dominios que se consideran en la ENESEM-2021:
+
+```{r, message = FALSE,echo = FALSE}
+
+tnr_1 <- readRDS("DATA/TNR/tnr_enesem_historica.rds") %>% 
+  select(dominio,tnr_max, tnr_pro, tnr_min)
+
+tnr_2 <- tnr_1 %>% mutate(act_principal=substr(dominio,2,2)) %>% 
+  group_by(act_principal) %>% 
+  summarise_if ( is.numeric , mean , na.rm  =  TRUE ) %>% 
+  mutate(dominio=paste0("2",act_principal)) %>% 
+  select(dominio,contains("tnr"))
+
+tnr <- rbind(tnr_2,tnr_1)
+
+
+marco_sin_inc_for <- marco_2021_canasta %>% 
+  mutate(inclusion_forzosa=ifelse(tamanou_plazas==5,1,0)) %>% 
+  filter(inclusion_forzosa==0)
+
+tnr <- rbind(tnr, marco_sin_inc_for %>% mutate(dom=paste0(tamanou_plazas,codigo_seccion)) %>% 
+               filter(!dom %in% tnr$dominio) %>% select(dominio=dom) %>% unique()%>% mutate(tnr_max=20.0,                                                                        tnr_pro=20.0,                                                                        tnr_min=20.0))
+
+
+knitr::kable(
+tnr %>% mutate(tnr_pro=round(tnr_pro,2),
+               tnr_max=round(tnr_max,2),
+               tnr_min=round(tnr_min,2)) %>% 
+  select(Dominio=dominio, tnr_max, tnr_pro, tnr_min)
+,align = "ccccc" ) 
+
 ```
 
 ## Tamaño de la muestra
@@ -244,30 +280,6 @@ Dentro de cada dominio de estudio se considera como grupo de inclusión forzosa 
 Se debe definir si se incluirá con probabilidad uno a las empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”.
 
 La variable de diseño, en base a la cual se calcula el tamaño de la muestra es “Ventas totales 2021”. Los valores poblacionales (marco muestral) de esta variable se toman de la base de datos del Directorio de Empresas y Establecimientos del año 2021 (DIEE-2021).
-
-Se consideraría, en caso de existir, una tasa de no respuesta particular para cada dominio de estudio, esta tasa de no respuesta podría ser tomada de la cobertura histórica actualizada para la ENESEM-2021, sin embargo, se debe definir si es adecuado o no el uso de esta infomración en la presente operación estadística. Para las empresas de tamaño dos y algunos otros dominios no se cuenta con una tasa de no respuesta ya que la ENESEM no recolecta información para esos casos, por ejemplo, para los dominios que involucren la actividad económica tipo "A", ya que esta actividad no es considerada en la ENESEM.
-
-A continuación se muestra las tasas de no respuesta para los dominios que se consideran en la ENESEM-2021:
-
-```{r, message = FALSE,echo = FALSE}
-
-knitr::kable(
-tnr %>% mutate(tnr_pro=round(tnr_pro,2)) %>% select(Dominio=dominio, tnr_max, tnr_pro, tnr_min)
-,align = "ccccc" ) 
-
-```
-
-Para el caso de las grandes empresas no se requiere una tasa de no repsuesta ya que tienen probabilidad uno de inclusión. Para todos los casos de los dominios que involucran las empresas de tamaño dos (pequeñas), no se tienen tasas de no repsuesta (la ENESEM no recolecta información para ese caso). Adicionalemnte, se presentan el resto de casos en los que los dominios de estudio no cuentan con una tasa de no respuesta: 
-
-```{r, message = FALSE,echo = FALSE}
-
-knitr::kable(
-unique(marco_2021_canasta %>% filter(! dom_m %in% tnr$dominio & !tamanou_plazas %in% c(2,5)) %>% select(Dominio=dom_m) )
-,align = "c" ) 
-
-```
-
-Para todos los dominios, de los que no se disponen de tasa de no respuesta, se propone desde el equipo de DECON/CAB-SIP fijar en el 20%. 
 
 Con las consideraciones indicadas, se porcede a hacer un calculo inicial del tamaño muetsral para cada dominio de estudio:
 
@@ -284,26 +296,29 @@ Tam_Total %>% filter(!is.na(n_max))%>%
 Podemos visualizar el tamaño máximo de la muestra para compararlo con la cantidad de productos que tenemos disponibles en cada uno de los dominios de estudio.
 
 ```{r, message = FALSE,echo = FALSE}
-knitr::kable(
+datatable(
 marco_2021_canasta %>% group_by(codigo_actividad_eco,tamanou_plazas) %>% 
   summarise(N1=n()) %>% 
   mutate(dominio = paste0(tamanou_plazas,substr(codigo_actividad_eco,1,1)))%>%
   group_by(dominio) %>% summarise(N_Prod = n()) %>% 
   left_join(Tam_Total,by="dominio") %>% select(dominio,N_Prod,n_max,Total) %>% 
   rename("Dominio"=dominio)
-,align = "ccc" )
+ ,filter = 'top',
+ options = list(pageLength = 25, autoWidth = TRUE)
+  )
+
 ```
 
 
 ```{r, message = FALSE,echo = FALSE}
 
 
-prod_marco %>% group_by(substr(codigo_actividad_eco,1,1) ) %>% summarise(n()) %>% adorn_totals()
-
-marco_2021_canasta %>% mutate("seis"=substr(codigo_actividad_eco,1,1), 
-                              control=ifelse(seis==codigo_seccion,1,0)) %>% filter(control==0)
-
-prod_marco %>% mutate("seis"=substr(codigo_actividad_eco,1,1)) %>% group_by(seis) %>% summarise(n())
+# prod_marco %>% group_by(substr(codigo_actividad_eco,1,1) ) %>% summarise(n()) %>% adorn_totals()
+# 
+# marco_2021_canasta %>% mutate("seis"=substr(codigo_actividad_eco,1,1), 
+#                               control=ifelse(seis==codigo_seccion,1,0)) %>% filter(control==0)
+# 
+# prod_marco %>% mutate("seis"=substr(codigo_actividad_eco,1,1)) %>% group_by(seis) %>% summarise(n())
 ```
 
 <!-- ## Comparación con ENESEM -->
@@ -329,7 +344,86 @@ prod_marco %>% mutate("seis"=substr(codigo_actividad_eco,1,1)) %>% group_by(seis
 <!-- ``` -->
 
 
+## Análisis Manufactura 
 
+Con el objetivo de darle un tratamiento especial al conjunto de empresas cuya actividad economica está relacionada a la actividad principal "C" (Manufactura) se presenta un análisis que define los siguientes dominios de estudio: 
+
+```{r, message = FALSE,echo = FALSE}
+
+base_manufactura <- read_excel("DATA/CANASTA/CANASTA_LISTADO.xlsx", 
+                              sheet = "MANUFACTURA",range = "A1:G131")
+
+#base_manufactura %>% transmute( Dominio_1 = if_else(Categorias==1,
+#                                          Categorias==1 ~ "Dominio 2"))
+
+#install.packages('DT')
+library(DT)
+
+base_manufactura$Categorias <- as.character(base_manufactura$Categorias)
+datatable(base_manufactura %>% select(COD_PROD, Dominio=Categorias),
+          filter = 'top',
+          options = list(pageLength = 25, autoWidth = TRUE))
+
+```
+
+Una vez definidos estos dominios se porcede a realizar el calculo del tamaño de muestra: 
+
+```{r, message = FALSE,echo = FALSE}
+
+# TNR para los nuevos dominios --------------------------------------------
+
+TNR_C_5_GR <- tnr %>% filter(dominio=="2C")
+TNR_C_5_GR$dominio[1] <- as.character(1)
+                     
+for (i in c(2:5)) {
+  
+  TNR_C_5_GR <- rbind(TNR_C_5_GR,TNR_C_5_GR[1,])
+  TNR_C_5_GR$dominio[i] <- as.character(i)
+
+  }
+
+nc=0.9
+z=qnorm(nc+(1-nc)/2)
+er=0.2
+base <- marco_2021_canasta %>% filter(codigo_seccion=="C",tamanou_plazas!=5) %>% 
+  left_join(select(base_manufactura,codigo_actividad_eco=COD_PROD,Categorias),
+            by="codigo_actividad_eco")
+
+#table(base$Categorias)
+
+tam_c <- base %>% 
+  mutate(dominio=as.character(Categorias),
+         ventas_totales=as.numeric(ventas_totales)) %>% 
+  group_by(dominio) %>% 
+  summarise(N=n(),
+            desv=sd(ventas_totales,na.rm = T),
+            ventas=sum(ventas_totales,na.rm = T)) %>% 
+  mutate(numerador=(N*desv)^2,
+         denominador=((N-1)/N)*((er*ventas/z)^2)+N*(desv^2),
+         tam=numerador/denominador) %>% 
+  left_join(select(TNR_C_5_GR,dominio,tnr_max,tnr_pro, tnr_min),by="dominio") %>% 
+  mutate(tnr_max=0.2,#ifelse(is.na(tnr_max),0,tnr_max/100),
+         tnr_pro=0.2,#ifelse(is.na(tnr_pro),0,tnr_pro/100),
+         tnr_min=0.2,#ifelse(is.na(tnr_min),0,tnr_min/100),
+         n1=ceiling(tam/(1-tnr_max)),
+         n2=ifelse(n1>N,N,n1),
+         n3=ceiling(tam/(1-tnr_pro)),
+         n4=ifelse(n3>N,N,n3),
+         n5=ceiling(tam/(1-tnr_min)),
+         n6=ifelse(n5>N,N,n5))
+
+tam_c <- tam_c %>% select(Dominio=dominio,Total=N,n=n4) %>% 
+  mutate(Porcentaje = n*100/Total) %>% 
+  adorn_totals()
+
+tam_c$Porcentaje[6] <- sum(tam_c$n)*100/sum(tam_c$Total)
+#dim(tam_c)
+
+knitr::kable(
+tam_c
+,align = "ccc" )
+
+```
 
 
 

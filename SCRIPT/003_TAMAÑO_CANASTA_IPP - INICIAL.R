@@ -8,29 +8,6 @@ library(reshape2)
 
 # CARGAMOS EL MARCOIPP ----------------------------------------------------
 marco_2021_canasta <- read_excel("PRODUCTOS/marco_IPP.xlsx")
-  
-# TASA DE NO RESPUESTA ENESEM 2021 ----------------------------------------
-
-tnr_1 <- readRDS("DATA/TNR/tnr_enesem_historica.rds") %>% 
-      select(dominio,tnr_max, tnr_pro, tnr_min)
-
-tnr_2 <- tnr_1 %>% mutate(act_principal=substr(dominio,2,2)) %>% 
-                   group_by(act_principal) %>% 
-                   summarise_if ( is.numeric , mean , na.rm  =  TRUE ) %>% 
-                   mutate(dominio=paste0("2",act_principal)) %>% 
-                   select(dominio,contains("tnr"))
-
-tnr <- rbind(tnr_2,tnr_1)
-
-tnr <- rbind(tnr, marco_sin_inc_for %>% mutate(dom=paste0(tamanou_plazas,codigo_seccion)) %>% 
-  filter(!dom %in% tnr$dominio) %>% select(dominio=dom) %>% unique()%>% mutate(tnr_max=20.0, 
-                                                           tnr_pro=20.0, 
-                                                           tnr_min=20.0))
-
-aux <- marco_sin_inc_for %>% mutate(dom=paste0(tamanou_plazas,codigo_seccion)) %>% 
-                select(dom)
-sum(unique(aux$dom) %in% tnr$dominio)==length(unique(aux$dom))                                                                                                               
-
 
 # CARGAMOS EL DIRECTORIO 2020 ---------------------------------------------
 
@@ -40,9 +17,6 @@ sum(unique(aux$dom) %in% tnr$dominio)==length(unique(aux$dom))
 # directorio_2020 <- directorio_2020 %>%  mutate(id_empresa=as.character(id_empresa))
 
 # INCLUSION FORZOSA -------------------------------------------------------
-
-# EMPRESAS QUE CAMBIARON DE TAMAÑO
-#Empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”,
 
   inc_for <- marco_2021_canasta %>% 
   mutate(inclusion_forzosa=ifelse(tamanou_plazas=="5",1,0)) %>% 
@@ -54,7 +28,6 @@ sum(unique(aux$dom) %in% tnr$dominio)==length(unique(aux$dom))
 marco_sin_inc_for <- marco_2021_canasta %>% 
   mutate(inclusion_forzosa=ifelse(tamanou_plazas==5,1,0)) %>% 
   filter(inclusion_forzosa==0)
-
 
 # PARAMETROS --------------------------------------------------------------
 
