@@ -1,15 +1,4 @@
 ---
-# title: 
-# author: "DINEM"
-# #date: "`r Sys.Date()`"
-# output:
-#   html_document: default
-#   #pdf_document: default
-#   toc: true
-#     toc_float: true
-#     theme: cerulean
-#     highlight: kate
-
 title: "Análisis del Marco y Tamaño Muestral del IPP-DN (DIEE-2021)"
 author: "DINEM"
 output:
@@ -21,15 +10,12 @@ output:
 ---
 
 ```{r, include=FALSE,echo = FALSE}
-#library(xlsx)
 library(readxl)
 library(dplyr)
 library(tidyverse)
 library(janitor)
 library(reshape2)
 library(DT)
-#install.packages("DT")
-#library("kableExtra")
 ```
 
 
@@ -102,7 +88,7 @@ prod_marco %>% rename("Actividad" = codigo_actividad_eco)
 
 ## Forma Institucional
 
-La  forma institucional corresponde a una sub-clasificación de la forma legal de las empresas, que permite identificar a las empresas dentro de una tipología cercana al tipo institucional del Sistema de Cuentas Nacionales.
+La forma institucional corresponde a una sub-clasificación de la forma legal de las empresas, que permite identificar a las empresas dentro de una tipología cercana al tipo institucional del Sistema de Cuentas Nacionales.
 
 Las posibles clasifiaciones son:
 
@@ -188,7 +174,7 @@ venna_002 %>% filter(ventas_totales>0) %>% group_by(dom) %>% summarise(Total = n
 
 ```
 
-De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 63 de ellas tienen un valor igual a cero en ventas en el DIEE-2020.
+De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 61 de ellas tienen un valor igual a cero en ventas en el DIEE-2020.
 
 ```{r, message = FALSE,echo = FALSE}
 knitr::kable(
@@ -196,7 +182,7 @@ venna_002 %>% filter(ventas_totales==0, tamanou_plazas!=1) %>% group_by(tamanou_
 ,align = "cc" ) 
 ```
 
-De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 42 de ellas tampoco presentan valor en ventas en el DIEE-2020.
+De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 36 de ellas tampoco presentan valor en ventas en el DIEE-2020.
 
 ```{r, message = FALSE,echo = FALSE}
 knitr::kable(
@@ -204,7 +190,7 @@ venna_002 %>% filter(is.na(ventas_totales), tamanou_plazas!=1) %>% group_by(tama
 ,align = "cc" ) 
 ```
 
-Existen 43 nuevas empresas, en comparación al DIEE-2020, que no disponen de datos en la variable ventas totales.
+Existen 38 nuevas empresas, en comparación al DIEE-2020, que no disponen de datos en la variable ventas totales.
 
 ```{r, message = FALSE,echo = FALSE}
 
@@ -215,7 +201,7 @@ rename("Tamaño"=tamanou_plazas)
 ,align = "cc" ) 
 ```
 
-Existen  empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”,
+Existen 33 empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”,
 
 ```{r, message = FALSE,echo = FALSE}
 
