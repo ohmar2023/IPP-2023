@@ -155,67 +155,67 @@ tabla_na_total <- tabla_na_total %>%
 knitr::kable(tabla_na_total,align = "cc")
 ```
 
-## Comparación con DIEE - 2020
+<!-- ## Comparación con DIEE - 2020 -->
 
-De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 4 de ellas tienen un valor mayor a cero en esta variable en el DIEE-2020.
+<!-- De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 4 de ellas tienen un valor mayor a cero en esta variable en el DIEE-2020. -->
 
-```{r, message = FALSE,echo = FALSE}
-#EMPRESAS CON NA EN VENTAS EN EL DIEE2021 QUE VAN A SER BSCADAS EN EL DIEE2020
-venna_001 <- marco_2021_canasta %>% filter(is.na(ventas_totales) )
-venna_002 <- directorio_2020 %>% filter(id_empresa %in% venna_001$id_empresa & tamanou_plazas!=1) 
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+<!-- #EMPRESAS CON NA EN VENTAS EN EL DIEE2021 QUE VAN A SER BSCADAS EN EL DIEE2020 -->
+<!-- venna_001 <- marco_2021_canasta %>% filter(is.na(ventas_totales) ) -->
+<!-- venna_002 <- directorio_2020 %>% filter(id_empresa %in% venna_001$id_empresa & tamanou_plazas!=1)  -->
 
-```
+<!-- ``` -->
 
-```{r, message = FALSE,echo = FALSE}
-#EMPRESAS CON NA EN VENTAS EN EL DIEE2021 QUE VAN A SER BSCADAS EN EL DIEE2020
-knitr::kable(
-venna_002 %>% filter(ventas_totales>0) %>% group_by(dom) %>% summarise(Total = n()) %>% adorn_totals(c("row")) %>% rename("Dominio"=dom)
-,align = "cc" ) 
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+<!-- #EMPRESAS CON NA EN VENTAS EN EL DIEE2021 QUE VAN A SER BSCADAS EN EL DIEE2020 -->
+<!-- knitr::kable( -->
+<!-- venna_002 %>% filter(ventas_totales>0) %>% group_by(dom) %>% summarise(Total = n()) %>% adorn_totals(c("row")) %>% rename("Dominio"=dom) -->
+<!-- ,align = "cc" )  -->
 
-```
+<!-- ``` -->
 
-De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 61 de ellas tienen un valor igual a cero en ventas en el DIEE-2020.
+<!-- De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 61 de ellas tienen un valor igual a cero en ventas en el DIEE-2020. -->
 
-```{r, message = FALSE,echo = FALSE}
-knitr::kable(
-venna_002 %>% filter(ventas_totales==0, tamanou_plazas!=1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño"=tamanou_plazas) %>% adorn_totals(c("row"))
-,align = "cc" ) 
-```
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+<!-- knitr::kable( -->
+<!-- venna_002 %>% filter(ventas_totales==0, tamanou_plazas!=1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño"=tamanou_plazas) %>% adorn_totals(c("row")) -->
+<!-- ,align = "cc" )  -->
+<!-- ``` -->
 
-De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 36 de ellas tampoco presentan valor en ventas en el DIEE-2020.
+<!-- De las empresas en las cuales el valor de ventas no presenta registro en el DIEE-2021, se tiene que 36 de ellas tampoco presentan valor en ventas en el DIEE-2020. -->
 
-```{r, message = FALSE,echo = FALSE}
-knitr::kable(
-venna_002 %>% filter(is.na(ventas_totales), tamanou_plazas!=1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% adorn_totals(c("row"))%>% rename("Tamaño"=tamanou_plazas)
-,align = "cc" ) 
-```
+<!-- ```{r, message = FALSE,echo = FALSE} -->
+<!-- knitr::kable( -->
+<!-- venna_002 %>% filter(is.na(ventas_totales), tamanou_plazas!=1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% adorn_totals(c("row"))%>% rename("Tamaño"=tamanou_plazas) -->
+<!-- ,align = "cc" )  -->
+<!-- ``` -->
 
-Existen 38 nuevas empresas, en comparación al DIEE-2020, que no disponen de datos en la variable ventas totales.
+<!-- Existen 38 nuevas empresas, en comparación al DIEE-2020, que no disponen de datos en la variable ventas totales. -->
 
-```{r, message = FALSE,echo = FALSE}
+<!-- ```{r, message = FALSE,echo = FALSE} -->
 
-# marco_2021_canasta %>% filter(!id_empresa %in% directorio_2020$id_empresa)%>% group_by(tamanou_plazas) %>% summarise(n()) %>% adorn_totals(c("row"))
-knitr::kable(
-marco_2021_canasta %>% filter(tamanou_plazas!=1 & !id_empresa %in% directorio_2020$id_empresa) %>% filter(is.na(ventas_totales)) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% adorn_totals(c("row")) %>% 
-rename("Tamaño"=tamanou_plazas)
-,align = "cc" ) 
-```
+<!-- # marco_2021_canasta %>% filter(!id_empresa %in% directorio_2020$id_empresa)%>% group_by(tamanou_plazas) %>% summarise(n()) %>% adorn_totals(c("row")) -->
+<!-- knitr::kable( -->
+<!-- marco_2021_canasta %>% filter(tamanou_plazas!=1 & !id_empresa %in% directorio_2020$id_empresa) %>% filter(is.na(ventas_totales)) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% adorn_totals(c("row")) %>%  -->
+<!-- rename("Tamaño"=tamanou_plazas) -->
+<!-- ,align = "cc" )  -->
+<!-- ``` -->
 
-Existen 33 empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”,
+<!-- Existen 33 empresas que en el 2020 eran de tamaño “Grande empresa” y en el 2021 son “Medianas B”, -->
 
-```{r, message = FALSE,echo = FALSE}
+<!-- ```{r, message = FALSE,echo = FALSE} -->
 
 
-base_1 <- marco_2021_canasta %>% 
-  left_join(select(directorio_2020,id_empresa,tam_old=tamanou_plazas),
-            by="id_empresa") %>% mutate(tam_old=ifelse(is.na(tam_old),"0",tam_old),
-         Cambio=ifelse((tamanou_plazas=="4" & tam_old=="5"),1,0)) 
-knitr::kable(
-base_1 %>% filter(Cambio==1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño 2021"=tamanou_plazas)
-,align = "cc" ) 
+<!-- base_1 <- marco_2021_canasta %>%  -->
+<!--   left_join(select(directorio_2020,id_empresa,tam_old=tamanou_plazas), -->
+<!--             by="id_empresa") %>% mutate(tam_old=ifelse(is.na(tam_old),"0",tam_old), -->
+<!--          Cambio=ifelse((tamanou_plazas=="4" & tam_old=="5"),1,0))  -->
+<!-- knitr::kable( -->
+<!-- base_1 %>% filter(Cambio==1) %>% group_by(tamanou_plazas) %>% summarise(Total=n()) %>% rename("Tamaño 2021"=tamanou_plazas) -->
+<!-- ,align = "cc" )  -->
 
-#base_1 %>% filter(Cambio==1) %>%  group_by(codigo_actividad_eco) %>% summarise(n())
-```
+<!-- #base_1 %>% filter(Cambio==1) %>%  group_by(codigo_actividad_eco) %>% summarise(n()) -->
+<!-- ``` -->
 
 ## Tasas de no respuesta (TNR)
 
