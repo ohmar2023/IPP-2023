@@ -29,6 +29,7 @@ marco_2021_canasta <- read_excel("PRODUCTOS/MARCO/marco_IPP.xlsx")
 # CARGAMOS LOS TAMAÑOS ----------------------------------------------------
 
 Tam_Total <- read_excel("PRODUCTOS/TAMANIO/Tam_Total.xlsx")
+Tam_Total_95_15 <- read_excel("PRODUCTOS/TAMANIO/Tam_Total_95_15.xlsx")
 
 # CARGAMOS EL DIRECTORIO 2020 ---------------------------------------------
 directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
@@ -221,8 +222,7 @@ knitr::kable(tabla_na_total,align = "cc")
 
 Se considera, en caso de existir, una tasa de no respuesta particular para cada dominio de estudio, esta tasa de no respuesta es tomada de la cobertura histórica actualizada para la ENESEM-2021, sin embargo, se debe definir si es adecuado o no el uso de esta infomración en la presente operación estadística. Para las "Pequeñas Empresas" y algunos otros dominios no se cuenta con una tasa de no respuesta ya que la ENESEM no recolecta información para esos casos, por ejemplo, para los dominios que involucren la actividad económica tipo "A", ya que esta actividad no es considerada en la ENESEM. 
 
-Para el caso de las "Pequeñas Empresas" se asigna como TNR el promedio de aquellos dominios de estudio que comaprten la misma actividad principal. Para todos los dominios, de los que no se disponen de tasa de no respuesta, se propone desde el equipo de DECON/CAB-SIP fijar en el 20%. Para las "Grandes Empresas" no se requiere una tasa de no respuesta ya que tienen probabilidad uno (1) de inclusión. 
-
+Para el caso de las "Pequeñas Empresas" se asigna como TNR el promedio de aquellos dominios de estudio que comaprten la misma actividad principal. Para todos los dominios, de los que no se disponen de tasa de no respuesta, se propone desde el equipo de DECON/CAB-SIP fijar en el 20%. Para las "Grandes Empresas" no se requiere una tasa de no respuesta ya que tienen probabilidad uno (1) de inclusión.
 
 A continuación se muestra las tasas de no respuesta para los dominios que se consideran en la ENESEM-2021:
 
@@ -264,7 +264,9 @@ Se debe definir si se incluirá con probabilidad uno a las empresas que en el 20
 
 La variable de diseño, en base a la cual se calcula el tamaño de la muestra es *“Ventas totales 2021”*. Los valores poblacionales (marco muestral) de esta variable se toman de la base de datos del Directorio de Empresas y Establecimientos del año 2021 (DIEE-2021).
 
-Con las consideraciones indicadas, se porcede a hacer un calculo inicial del tamaño muestral para cada dominio de estudio:
+Con las consideraciones indicadas, se porcede a hacer un calculo inicial del tamaño muestral para cada dominio de estudio.
+
+#### Resultado 1: Nivel de confianza al 90% y error relativo del 10%.
 
 
 ```{r, message = FALSE,echo = FALSE}
@@ -272,12 +274,27 @@ Con las consideraciones indicadas, se porcede a hacer un calculo inicial del tam
 datatable(
 Tam_Total %>% 
   rename("Dominio" = dominio) %>% 
-  adorn_totals(c("row"))
-,filter = 'top',options = list(pageLength = 25, autoWidth = TRUE ))
+  adorn_totals(c("row","col"))
+,filter = 'top',options = list(pageLength = 10, autoWidth = TRUE ))
 
 ```
 
-Podemos visualizar el tamaño promedio de la muestra para compararlo con la cantidad de productos que tenemos disponibles en cada uno de los dominios de estudio.
+#### Resultado 2: Nivel de confianza al 90% y error relativo del 15%.
+
+```{r, message = FALSE,echo = FALSE}
+
+datatable(
+Tam_Total_95_15 %>% 
+  rename("Dominio" = dominio) %>% 
+  adorn_totals(c("row","col"))
+,filter = 'top',options = list(pageLength = 10, autoWidth = TRUE ))
+
+```
+
+
+#### Comparación del tamaño muestral con los estratos (Código CIIU Rev 4 - 6 dígitos)
+
+Podemos visualizar el tamaño promedio de la muestra (resultado 2) para compararlo con la disponibilidad de *Códigos a 6 dígitos* que tenemos en cada uno de los dominios de estudio.
 
 ```{r, message = FALSE,echo = FALSE}
 datatable(
@@ -285,8 +302,8 @@ marco_2021_canasta %>% group_by(codigo_actividad_eco,tamanou_plazas) %>%
   summarise(N1=n()) %>% 
   mutate(dominio = paste0(tamanou_plazas,substr(codigo_actividad_eco,1,1)))%>%
   group_by(dominio) %>% summarise(N_Prod = n()) %>% 
-  left_join(Tam_Total,by="dominio") %>% select(dominio,N_Prod,n_pro,Total) %>% 
-  rename("Dominio"=dominio)
+  left_join(Tam_Total_95_15,by="dominio") %>% select(dominio,N_Prod,n_pro,Total) %>% 
+  rename("Dominio"=dominio,"Estratos"=N_Prod)
  ,filter = 'top',
  options = list(pageLength = 10, autoWidth = TRUE)
   )
@@ -346,11 +363,11 @@ library(DT)
 base_manufactura$Categorias <- as.character(base_manufactura$Categorias)
 datatable(base_manufactura %>% select(COD_PROD, Dominio=Categorias),
           filter = 'top',
-          options = list(pageLength = 25, autoWidth = TRUE))
+          options = list(pageLength = 10, autoWidth = TRUE))
 
 ```
 
-Una vez definidos estos dominios se procede a realizar el cálculo del tamaño de muestra: 
+Una vez definidos estos dominios se procede a realizar el cálculo del tamaño de muestra con un nivel de confianza del 90% y un error relativo del 15%:
 
 ```{r, message = FALSE,echo = FALSE}
 
@@ -426,9 +443,7 @@ TNR_C_5_GR[1,]
 
 Para defiir el tamaño muestral se tienen los siguientes escenarios: 
 
-##### Primer caso: 
-
-Se subdivide a la actividad principal C en tres dominios de estudio:
+##### Primer escenario (90%,10%): 
 
 ```{r, message = FALSE,echo = FALSE}
 caso_1 <- Tam_Total %>% filter(!is.na(n_max))%>% 
@@ -441,8 +456,20 @@ caso_1[dim(caso_1)[1],]
 
 ```
 
-##### Segundo caso: 
-Se subdivide a la actividad principal C en cinco dominios de estudio:
+##### Segundo escenario (90%,15%): 
+
+```{r, message = FALSE,echo = FALSE}
+caso_1 <- Tam_Total_95_15 %>% filter(!is.na(n_max))%>% 
+  rename("Dominio" = dominio) %>% 
+  adorn_totals(c("row"))
+
+knitr::kable(
+caso_1[dim(caso_1)[1],]
+,align = "ccc" )
+
+```
+
+##### Tercer escenario (5 Dominios-C,90%,15%): 
 
 ```{r, message = FALSE,echo = FALSE}
 caso_2 <- Tam_Total %>% filter(!dominio %in% c("2C","3C","4C") ) %>% 
