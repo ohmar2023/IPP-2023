@@ -32,12 +32,12 @@ Tam_Total <- read_excel("PRODUCTOS/TAMANIO/Tam_Total.xlsx")
 Tam_Total_95_15 <- read_excel("PRODUCTOS/TAMANIO/Tam_Total_95_15.xlsx")
 
 # CARGAMOS EL DIRECTORIO 2020 ---------------------------------------------
-directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
-                    filter(anio==2020)
-
-directorio_2020 <- directorio_2020 %>%
-  mutate(id_empresa=as.character(id_empresa),
-  dom = paste0(tamanou_plazas,codigo_seccion))
+# directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
+#                     filter(anio==2020)
+# 
+# directorio_2020 <- directorio_2020 %>%
+#   mutate(id_empresa=as.character(id_empresa),
+#   dom = paste0(tamanou_plazas,codigo_seccion))
 ```
 
 ## Construcción del marco muestral
@@ -274,7 +274,7 @@ Con las consideraciones indicadas, se porcede a hacer un calculo inicial del tam
 datatable(
 Tam_Total %>% 
   rename("Dominio" = dominio) %>% 
-  adorn_totals(c("row","col"))
+  adorn_totals()
 ,filter = 'top',options = list(pageLength = 10, autoWidth = TRUE ))
 
 ```
@@ -286,7 +286,7 @@ Tam_Total %>%
 datatable(
 Tam_Total_95_15 %>% 
   rename("Dominio" = dominio) %>% 
-  adorn_totals(c("row","col"))
+  adorn_totals()
 ,filter = 'top',options = list(pageLength = 10, autoWidth = TRUE ))
 
 ```
