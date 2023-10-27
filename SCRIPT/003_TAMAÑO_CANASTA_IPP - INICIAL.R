@@ -100,3 +100,6 @@ write.xlsx(tamanio_90_10,"Tam_Sin_Inc_For.xlsx")
 write.xlsx(tamanio_final_90_10,"PRODUCTOS/TAMANIO/Tam_Total.xlsx")
 write.xlsx(marco_sin_inc_for,"Marco_sin_inclusión_for.xlsx")
 
+
+
+
