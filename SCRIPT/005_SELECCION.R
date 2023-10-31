@@ -6,20 +6,31 @@ library(readxl)
 
 anion <- 2022
 
-#tamanio <- readRDS(paste0("productos/01_tamanio/", anion, "/tamaño_muestra_seleccion.rds"))
-
-# CARGAMOS LOS TAMAÑOS ----------------------------------------------------
+# ------------------------------------------------------------------------------
+# CARGAMOS LOS TAMAÑOS ---------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 tamanio <- read_excel("PRODUCTOS/TAMANIO/005/Tam_Sin_Inc_For.xlsx") 
 tamanio[is.na(tamanio)] <- 0
-tamanio %>% View()
-# MUESTRA SIN INCLUSIÓN FOR -----------------------------------------------
-#muestra <- readRDS(paste0("productos/01_tamanio/", anion, "/inclusion_no_forzosa.rds")) %>% 
- 
+#tamanio %>% View()
 
-muestra <- read_excel("IPP_2021_REVISION_OMAR/PRODUCTOS/Marco_sin_inclusión_for.xlsx") %>% 
+
+# ------------------------------------------------------------------------------
+# CARGAMOS LOS TAMAÑOS ---------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+marco_sin_inc_for %>% group_by(dom_m,codigo_actividad_eco) %>% 
+  summarise(n()) %>%
+  left_join(select(tamanio,dom_m=dominio,n4),by="dom_m") %>% 
+  filter(dom_m!=c("2C","3C","4C")) %>% View()
+
+# ------------------------------------------------------------------------------
+# MUESTRA SIN INCLUSIÓN FOR ----------------------------------------------------
+# ------------------------------------------------------------------------------
+ 
+muestra <- read_excel("PRODUCTOS/TAMANIO/005/Marco_sin_inclusión_for.xlsx") %>% 
  mutate(dominio = paste0(tamanou_plazas,codigo_seccion)) %>% 
-  # El esceneario ecogido es el número 2 por lo que el n es el n4 20230328
+  # El esceneario ecogido es el número 2 por lo que el n es el n4 (PROMEDIO)
   left_join(select(tamanio,dominio,n=n4),by="dominio") %>% 
   group_by(dominio) %>% 
   sample_n(unique(n)) %>% 
