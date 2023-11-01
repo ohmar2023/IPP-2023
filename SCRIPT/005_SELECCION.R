@@ -22,7 +22,7 @@ tamanio[is.na(tamanio)] <- 0
 marco_aux <- marco_sin_inc_for %>% 
   filter(!dom_m %in% c("2C","3C","4C")) %>% 
   group_by(dom_m) %>% 
-  summarise(N=n())
+  summarise(N=n(),H = n_distinct(codigo_actividad_eco)) 
   #right_join(marco_sin_inc_for,by="dom_m") 
   
 aux <- marco_sin_inc_for %>% 
@@ -33,9 +33,22 @@ aux <- marco_sin_inc_for %>%
   left_join(marco_aux,by="dom_m") %>%  
    adorn_totals() 
 
+# PPT 
 aux %>% mutate(p = Nh/N,
-               n = trunc(p*n4),
-               n = if_else(n<1,1,n)) %>% View()
+               PPT = trunc(p*n4),
+               PPT = if_else(PPT<1,1,PPT),
+               ) %>% View("PPT")
+
+# kish
+aux %>% mutate(num = sqrt((1/H^2)*(Nh/N)^2)) %>% 
+                 group_by(dom_m) %>% 
+                 summarise(n4*num/sum(num)) %>% View("KISH")
+
+# "Valanceado"
+aux %>% mutate() %>% 
+  group_by(dom_m) %>% 
+  summarise(n4*num/sum(num)) %>% View()
+
 
 # ------------------------------------------------------------------------------
 # MUESTRA SIN INCLUSIÓN FOR ----------------------------------------------------
