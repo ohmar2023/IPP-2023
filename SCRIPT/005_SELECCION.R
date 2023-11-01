@@ -19,10 +19,23 @@ tamanio[is.na(tamanio)] <- 0
 # CARGAMOS LOS TAMAÑOS ---------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-marco_sin_inc_for %>% group_by(dom_m,codigo_actividad_eco) %>% 
-  summarise(n()) %>%
+marco_aux <- marco_sin_inc_for %>% 
+  filter(!dom_m %in% c("2C","3C","4C")) %>% 
+  group_by(dom_m) %>% 
+  summarise(N=n())
+  #right_join(marco_sin_inc_for,by="dom_m") 
+  
+aux <- marco_sin_inc_for %>% 
+  filter(!dom_m %in% c("2C","3C","4C")) %>% 
+  group_by(dom_m,codigo_actividad_eco) %>% 
+  summarise(Nh=n()) %>% 
   left_join(select(tamanio,dom_m=dominio,n4),by="dom_m") %>% 
-  filter(dom_m!=c("2C","3C","4C")) %>% View()
+  left_join(marco_aux,by="dom_m") %>%  
+   adorn_totals() 
+
+aux %>% mutate(p = Nh/N,
+               n = trunc(p*n4),
+               n = if_else(n<1,1,n)) %>% View()
 
 # ------------------------------------------------------------------------------
 # MUESTRA SIN INCLUSIÓN FOR ----------------------------------------------------
