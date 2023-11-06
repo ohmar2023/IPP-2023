@@ -3,6 +3,8 @@ library(dplyr)
 library(tidyverse)
 library(openxlsx)
 library(readxl)
+library(reshape2)
+library(janitor)
 
 anion <- 2022
 
@@ -30,14 +32,23 @@ aux <- marco_sin_inc_for %>%
   group_by(dom_m,codigo_actividad_eco) %>% 
   summarise(Nh=n()) %>% 
   left_join(select(tamanio,dom_m=dominio,n4),by="dom_m") %>% 
-  left_join(marco_aux,by="dom_m") %>%  
-   adorn_totals() 
+  left_join(marco_aux,by="dom_m") 
 
-# PPT 
+# PPT MINIMO 1 - AUMENTANDO TAMAÑO MUESTRAL
 aux %>% mutate(p = Nh/N,
                PPT = trunc(p*n4),
                PPT = if_else(PPT<1,1,PPT),
                ) %>% View("PPT")
+
+# PPT - MINIMO 5 - AUMENTANDO TAMAÑO MUESTRAL
+aux %>% mutate(p = Nh/N,
+               PPT = trunc(p*n4),
+               PPT_min_5 = if_else(PPT<5 & Nh>=5,5,
+                                  if_else(PPT<5 & Nh<5, Nh, PPT))
+) %>% adorn_totals() %>% View()
+
+
+# ---------------------------------------------------------------------------------
 
 # kish
 aux %>% mutate(num = sqrt((1/H^2)*(Nh/N)^2)) %>% 
