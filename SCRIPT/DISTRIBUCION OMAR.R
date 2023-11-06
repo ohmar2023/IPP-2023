@@ -1,13 +1,8 @@
-
-
-
-
 distr <- function(v,n,db)
 {
   r <- rep(0,length(v))
   
   repeat {
-
     k = ceiling(n/length(v[v!=10000]))
     #print(k)
     if(sum(v-k<0)==0)
@@ -22,11 +17,8 @@ distr <- function(v,n,db)
     n = n - abs(sum((v-k)[v-k<0]))
     v[!v-k>=0] <- 10000
     }
-    
   }
-
 }
-
 
 # USANDO FUNCION PARA DISTRIBUCION ----------------------------------------
 
