@@ -47,15 +47,22 @@ seleccion_1 <- aux %>% mutate(p = Nh/N,
 # ------------------------------------------------------------------------------
 
 seleccion_2 <- aux %>% mutate(a = if_else(Nh<5,Nh,5),
-                              b = Nh-a,
-                              p = Nh/N,
-                              PPT_min_5 = trunc(p*n4),
-                              PPT_min_5 = if_else(PPT_min_5<5 & Nh>=5,5,
-                                                  if_else(PPT_min_5<5 & Nh<5, Nh,
-                                                          PPT_min_5))
-)
+                              b = Nh-a)
 
-seleccion_2 %>% View()
+aux_2 <-  seleccion_2 %>%  
+  group_by(dom_m) %>% 
+  summarise(Nh_b=sum(b),
+            n_b = unique(n4)-sum(a)) %>% 
+  right_join(seleccion_2,by="dom_m") %>% 
+  mutate(n_b = if_else(n_b<0,0,n_b),
+         PPT_b =if_else(Nh_b==0,0,ceiling((n_b)*(b/Nh_b))),
+         PPT_b = PPT_b+a,
+         Control = Nh - PPT_b)
+
+
+seleccion_2 <- aux_2                      
+
+aux_2 %>% adorn_totals() %>% View()
 # ------------------------------------------------------------------------------
 # SELECCION UNIF  --------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -124,15 +131,15 @@ tam_selec_final %>% mutate(diff_1 = Nh-Unif_Mod) %>% View()
 #                  summarise(n4*num/sum(num)) %>% View("KISH")
 
 # ------------------------------------------------------------------------------
-# MUESTRA SIN INCLUSIÓN FOR ----------------------------------------------------
+# MUESTRA SIN INCLUSIÓN FOR Y SIN DOMINIOS C -----------------------------------
 # ------------------------------------------------------------------------------
 
 muestra <- marco_sin_inc_for %>% filter(codigo_seccion!="C")  %>% 
   mutate(dom_m = paste0(tamanou_plazas,codigo_seccion)) %>%
-  left_join(select(tam_selec_final,dom_m,codigo_actividad_eco,Unif_Mod),
+  left_join(select(seleccion_2,dom_m,codigo_actividad_eco,PPT_b),
              by=c("dom_m","codigo_actividad_eco")) %>% 
   group_by(dom_m,codigo_actividad_eco) %>% 
-  sample_n(Unif_Mod) %>% 
+  sample_n(PPT_b) %>% 
   select(id_empresa,dom_m,codigo_actividad_eco)
 
 # control de muetsra
@@ -145,12 +152,24 @@ muestra %>% group_by(dom_m) %>% summarise(n_muestra=n()) %>%
 tam_selec_final %>% adorn_totals() %>% View()
 
 
+# ------------------------------------------------------------------------------
+# Seleccion C-MANUFACTURA  ----------------------------------------------------
+# ------------------------------------------------------------------------------
+
+muestra_c <- marco_sin_inc_for %>% filter(codigo_seccion=="C")  %>% 
+  mutate(dom_m = paste0(tamanou_plazas,codigo_seccion)) %>%
+  left_join(select(tamanio,dom_m=dominio,n4),
+            by=c("dom_m")) %>% 
+  group_by(dom_m) %>% 
+  sample_n(n4) %>% 
+  select(id_empresa,dom_m,codigo_actividad_eco)
 
 
+# control de muetsra
 
-
-
-
+muestra_c %>% group_by(dom_m) %>% summarise(n_muestra=n()) %>%
+  left_join(select(tamanio,n4,dom_m = dominio),by="dom_m") %>% 
+  mutate(dif = n_muestra-n4) %>% adorn_totals() %>% View()
 
 
 
