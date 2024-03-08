@@ -1,12 +1,15 @@
 ---
 title: "Análisis del Marco y Tamaño Muestral del IPP-DN (DIEE-2021)"
-author: "DINEM"
+author: "OMAR LLAMBO"
+subtitle: Dirección de infraestructura de estadistica y muestreo (DINEM)
 output:
   html_document:
-    toc: true
-    toc_float: true
+    toc: yes
+    toc_float: yes
     theme: cerulean
     highlight: kate
+  pdf_document:
+    toc: yes
 ---
 
 ```{r, include=FALSE,echo = FALSE}
@@ -28,8 +31,8 @@ marco_2021_canasta <- read_excel("PRODUCTOS/MARCO/marco_IPP.xlsx")
 
 # CARGAMOS LOS TAMAÑOS ----------------------------------------------------
 
-Tam_Total <- read_excel("PRODUCTOS/TAMANIO/Tam_Total.xlsx")
-Tam_Total_95_15 <- read_excel("PRODUCTOS/TAMANIO/Tam_Total_95_15.xlsx")
+Tam_Total <- read_excel("PRODUCTOS/TAMANIO/004/Tam_Total.xlsx")
+Tam_Total_95_15 <- read_excel("PRODUCTOS/TAMANIO/005/Tam_Total.xlsx")
 
 # CARGAMOS EL DIRECTORIO 2020 ---------------------------------------------
 # directorio_2020 <- readRDS("DATA/DIRECTORIO/2020/directorio_20220412.rds") %>%
@@ -42,7 +45,7 @@ Tam_Total_95_15 <- read_excel("PRODUCTOS/TAMANIO/Tam_Total_95_15.xlsx")
 
 ## Construcción del marco muestral
 
-Considerando el listado de los códigos (Código CIIU Rev 4 - 6 dígitos) que se enviaron de los productos que forman parte de la canasta del IPP, se seleccionan las actividades pricipales (Código CIIU4 - Sección - 1 dígito) para la elaboración del marco de muestreo.
+Considerando `r names(Tam_Total)` el listado de los códigos (Código CIIU Rev 4 - 6 dígitos) que se enviaron de los productos que forman parte de la canasta del IPP, se seleccionan las actividades pricipales (Código CIIU4 - Sección - 1 dígito) para la elaboración del marco de muestreo.
 
 Se consideran las empresas cuya situación consta como "activas" (1) y se descartan las microempresas, con lo que se tiene: 
 
@@ -56,7 +59,7 @@ El tamaño y actividad principal económica de la empresa conforman cada dominio
 ```{r, message = FALSE,echo = FALSE}
 datatable(
 marco_2021_canasta %>% group_by(dom_m) %>% summarise(Total=n()) %>% rename(Dominio=dom_m) %>% adorn_totals(c("row"))
-,filter = 'top',options = list(pageLength = 5, autoWidth = TRUE)) 
+,filter = 'top',options = list(pageLength = 500, autoWidth = TRUE)) 
 ```
 
 Podemos observar la disponibilidad de cada *Código CIIU Rev 4 - 6* por tamaño de empresa:
@@ -73,7 +76,7 @@ prod_marco <- dcast(prod_marco,codigo_actividad_eco~tamanou_plazas, value.var = 
 
 datatable(
 prod_marco %>% rename("Actividad" = codigo_actividad_eco)
-,filter = 'top',options = list(pageLength = 5, autoWidth = TRUE)) 
+,filter = 'top',options = list(pageLength = 500, autoWidth = TRUE)) 
 
 ```
 
@@ -252,7 +255,7 @@ tnr %>% mutate(tnr_pro=round(tnr_pro,2),
                tnr_max=round(tnr_max,2),
                tnr_min=round(tnr_min,2)) %>% 
   select(Dominio=dominio, tnr_max, tnr_pro, tnr_min)
-,filter = 'top',options = list(pageLength = 10, autoWidth = TRUE)) 
+,filter = 'top',options = list(pageLength = 500, autoWidth = TRUE)) 
 
 ```
 
@@ -275,7 +278,7 @@ datatable(
 Tam_Total %>% 
   rename("Dominio" = dominio) %>% 
   adorn_totals()
-,filter = 'top',options = list(pageLength = 10, autoWidth = TRUE ))
+,filter = 'top',options = list(pageLength = 5000, autoWidth = TRUE ))
 
 ```
 
@@ -305,7 +308,7 @@ marco_2021_canasta %>% group_by(codigo_actividad_eco,tamanou_plazas) %>%
   left_join(Tam_Total_95_15,by="dominio") %>% select(dominio,N_Prod,n_pro,Total) %>% 
   rename("Dominio"=dominio,"Estratos"=N_Prod)
  ,filter = 'top',
- options = list(pageLength = 10, autoWidth = TRUE)
+ options = list(pageLength = 500, autoWidth = TRUE)
   )
 
 ```
@@ -363,7 +366,7 @@ library(DT)
 base_manufactura$Categorias <- as.character(base_manufactura$Categorias)
 datatable(base_manufactura %>% select(COD_PROD, Dominio=Categorias),
           filter = 'top',
-          options = list(pageLength = 10, autoWidth = TRUE))
+          options = list(pageLength = 500, autoWidth = TRUE))
 
 ```
 
