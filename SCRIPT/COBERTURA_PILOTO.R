@@ -25,7 +25,6 @@ data_muestra_m_p <- read_excel("PILOTO COBERTURA/Muestra_Empresas_CAB-SIPP_v1.xl
                                sheet = "Consolidado Pequeñas Medianas") %>% 
   clean_names()
 
-
 #--------------------------------------------------------------------------
 # GRANDES -----------------------------------------------------------------
 #--------------------------------------------------------------------------
@@ -56,7 +55,7 @@ DB2 <- data_muestra_m_p %>% select(id_empresa,dom_m,codigo_actividad_eco,
 DB <- rbind(DB1,DB2)
 
 #--------------------------------------------------------------------------
-# RESUMENES  --------------------------------------------------------------
+# RESUMEN - LO LEVANTADO POR PRODUCTO -------------------------------------
 #--------------------------------------------------------------------------
 
 aux <- DB %>% filter(!is.na(Codigo)) %>% 
@@ -75,21 +74,28 @@ aux %>% filter(dom_m != "5C")%>%
 # GRAFICO POR PRODUCTO  ---------------------------------------------------
 #--------------------------------------------------------------------------
 
-aux %>% filter(!is.na(Codigo),Total>=5) %>%
+DB %>% filter(!is.na(Codigo)) %>% 
+  group_by(Codigo) %>% summarise(Total=n()) %>% 
   ggplot(aes(x=Codigo,y=Total,fill = Codigo)) + 
   geom_bar(stat="identity") +
   theme(legend.position = "bottom")
 
 #--------------------------------------------------------------------------
-# BASE COBERTURA POR DOM  -------------------------------------------------
+# RESUMEN - LO LEVANTADO POR DOM  -----------------------------------------
 #--------------------------------------------------------------------------
 
 duplicated(DB$id_empresa)
 aux_2 <- DB[!duplicated(DB$id_empresa),]
 
-cobertura_dom <- aux_2 %>% group_by(dom_m) %>% 
-  summarise(total_levantado = n_distinct(Codigo)) 
+# aux_2 %>% filter()
+# group_by(dom_m) %>% summarise(n()) %>% adorn_totals() %>% View()
 
+cobertura_dom <- aux_2 %>% 
+  filter(!is.na(Codigo)) %>%
+  group_by(dom_m) %>% 
+  summarise(total_levantado = n()) 
+
+cobertura_dom %>% adorn_totals() %>% View()
 
 #--------------------------------------------------------------------------
 # MUESTRA ENVIADA  --------------------------------------------------------
@@ -98,17 +104,55 @@ cobertura_dom <- aux_2 %>% group_by(dom_m) %>%
 m1 <- marco_2021_canasta %>% filter(tamanou_plazas=="5") %>% 
   group_by(dom_m) %>% summarise(n_muestra = n())
 
+
+muestra_enviar <- read_excel("Muestra_enviar.xlsx")
+
 m2 <- muestra_enviar %>% group_by(dom_m) %>% 
   summarise(n_muestra = n())
 
 m <- rbind(m1,m2) 
 
-tabla_levantado <- cobertura_dom %>% left_join(m,by="dom_m") %>% 
+tabla_levantado <- cobertura_dom %>% right_join(m,by="dom_m") %>% 
   mutate(porcentaje_levantado = round(100*total_levantado/n_muestra,2))
 
 tabla_levantado %>% #filter(grepl(dom_m,pattern = "2")) %>% 
   ggplot(aes(x=dom_m,y=porcentaje_levantado,fill = dom_m)) + 
   geom_bar(stat="identity") +
   theme(legend.position = "")  
+
+tabla_levantado %>% adorn_totals() %>% View()
+
+
+#--------------------------------------------------------------------------
+# MUESTRA ENVIADA  --------------------------------------------------------
+#--------------------------------------------------------------------------
+
+obs <- DB %>% filter(!is.na(Codigo)) %>% 
+  group_by(id_empresa) %>% 
+  summarise(n_productos = n_distinct(Producto),
+            n_codigo = n_distinct(Codigo)) %>% 
+  mutate (Obs = if_else(n_productos==n_codigo,1,0)) %>% 
+  filter(Obs==0) 
+
+library(rio)
+export(obs,"obs.xlsx")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
