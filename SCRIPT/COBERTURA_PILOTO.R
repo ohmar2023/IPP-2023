@@ -16,12 +16,14 @@ library(ggplot2)
 # LECTURA DE BASES DE DATOS -----------------------------------------------
 #--------------------------------------------------------------------------
 
-data_muestra_f <- read_excel("PILOTO COBERTURA/Muestra_Empresas_CAB-SIPP_v1.xlsx", 
+marco_2021_canasta <- read_excel("PRODUCTOS/MARCO/marco_IPP.xlsx")
+
+data_muestra_f <- read_excel("DATA/PILOTO COBERTURA/Muestra_Empresas_CAB-SIPP_v1.xlsx", 
                                            sheet = "Consolidado Forzosa") %>% clean_names()
 data_muestra_f <- data_muestra_f %>% left_join( select(marco_2021_canasta,id_empresa,dom_m),
                               by="id_empresa")
 
-data_muestra_m_p <- read_excel("PILOTO COBERTURA/Muestra_Empresas_CAB-SIPP_v1.xlsx", 
+data_muestra_m_p <- read_excel("DATA/PILOTO COBERTURA/Muestra_Empresas_CAB-SIPP_v1.xlsx", 
                                sheet = "Consolidado Pequeñas Medianas") %>% 
   clean_names()
 
@@ -75,9 +77,10 @@ aux %>% filter(dom_m != "5C")%>%
 #--------------------------------------------------------------------------
 
 DB %>% filter(!is.na(Codigo)) %>% 
-  group_by(Codigo) %>% summarise(Total=n()) %>% 
+  group_by(Codigo) %>% summarise(Total=n()) %>%
+  filter(Total >= 5 ) %>% 
   ggplot(aes(x=Codigo,y=Total,fill = Codigo)) + 
-  geom_bar(stat="identity") +
+  geom_bar(stat="identity") + 
   theme(legend.position = "bottom")
 
 #--------------------------------------------------------------------------
