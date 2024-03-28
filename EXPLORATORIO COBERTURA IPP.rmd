@@ -124,6 +124,7 @@ Se tiene la agrupación por dominio que fue levanta en el pilotaje del  IPP:
 tabla_levantado %>% #filter(grepl(dom_m,pattern = "2")) %>% 
   ggplot(aes(x=dom_m,y=porcentaje_levantado,fill = dom_m)) + 
   geom_bar(stat="identity", position = position_dodge()) +
+  labs(x="Dominio",y="Efectividad")+
   #theme(legend.position = "") +
   theme(legend.position = "",axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))
 
@@ -150,7 +151,7 @@ DB %>% filter(!is.na(Codigo)) %>%
   filter(Total >= 5 ) %>% 
   ggplot(aes(x=Codigo,y=Total,fill = Codigo)) + 
   geom_bar(stat="identity") + 
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",axis.text.x  = element_blank())
 
 ```
 
@@ -168,7 +169,6 @@ DB %>% filter(!is.na(Codigo)) %>%
 
 ```{r, message = FALSE,echo = FALSE}
 
-
 nc=0.9
 z=qnorm(nc+(1-nc)/2)
 er=0.2
@@ -183,8 +183,8 @@ tam <- base_productos %>%
   mutate(numerador = (N*desv)^2,
          denominador = ((N-1)/N)*((er*v_diseno_mean/z)^2) + N*(desv^2),
          tam = numerador/denominador,
-         n = tam/(1+(tam/N)),
-         n = ceiling(n))
+         #n = tam/(1+(tam/N)),
+         n = ceiling(tam))
 
 knitr::kable(
 tam
@@ -211,8 +211,8 @@ tam2 <- base_productos_2 %>%
   mutate(numerador = (N*desv)^2,
          denominador = ((N-1)/N)*((er*v_diseno_mean/z)^2) + N*(desv^2),
          tam = numerador/denominador,
-         n = tam/(1+(tam/N)),
-         n = ceiling(n))
+         #n = tam/(1+(tam/N)),
+         n = ceiling(tam))
 
 knitr::kable(
 tam2
@@ -224,7 +224,9 @@ tam2
 
 * La cobertura de la prueba piloto es deficiente, esto es un obstáculo para responder a los requerimientos que se habían planteado inicialmente. 
 
-* El cálculo del tamaño para una submuestra se lo ha realizado a manera de ejercicio, sin embargo, cabe aclarar que debido a la deficincia en la cobertura estos resultados no pueden ser considerados como definitivos. Adicionalmente, no se contaron con los precios levantados en la prueba piloto, los datos facilitados sirven unicamente como ejemplo.
+* El escenario del cálculo del tamaño para una submuestra a nivel de prodcuto es deficiente, en el ejercicio realizado el calculo del tamaño alcanza el tamaño del dominio, por lo que no es viable proceder con este nuevo calculo, esto se debe a la reducida cantidad de tomas por productos.  
+
+* El cálculo del tamaño para una submuestra se lo ha realizado a manera de ejercicio, sin embargo, cabe aclarar que debido a la deficiencia en la cobertura estos resultados y metodología no pueden ser considerados como definitivos y/o adecuados. Adicionalmente, no se contaron con los precios levantados en la prueba piloto, los datos facilitados fueron recolectados del actual IPP y sirven únicamente como ejemplo del ejercicio planteado.
 
 
 

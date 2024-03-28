@@ -61,8 +61,9 @@ DB <- rbind(DB1,DB2)
 #--------------------------------------------------------------------------
 
 aux <- DB %>% filter(!is.na(Codigo)) %>% 
-  group_by(dom_m) %>% summarise(Total = n()) 
+  group_by(Codigo) %>% summarise(Total = n()) 
 
+table(aux) %>% View()
 #--------------------------------------------------------------------------
 # GRAFICO POR DOMINIO  ----------------------------------------------------
 #--------------------------------------------------------------------------
@@ -125,6 +126,7 @@ tabla_levantado %>% #filter(grepl(dom_m,pattern = "2")) %>%
 
 tabla_levantado %>% adorn_totals() %>% View()
 
+export(tabla_levantado,"tabla.cobertura.xlsx")
 
 #--------------------------------------------------------------------------
 # MUESTRA ENVIADA  --------------------------------------------------------
